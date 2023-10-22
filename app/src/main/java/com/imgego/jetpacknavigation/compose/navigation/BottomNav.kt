@@ -1,23 +1,20 @@
 package com.imgego.jetpacknavigation.compose.navigation
 
 import android.content.res.Configuration
-import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
+import androidx.compose.material.BottomNavigation
+import androidx.compose.material.BottomNavigationItem
+import androidx.compose.material.Icon
+import androidx.compose.material.LocalContentColor
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -50,64 +47,40 @@ fun BottomBar(navController: NavHostController) {
     val navStackBackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navStackBackEntry?.destination
 
-    NavigationBar(
-        containerColor = MaterialTheme.colorScheme.primary,
-        contentColor = Color.White
+    BottomNavigation(
+        backgroundColor = MaterialTheme.colorScheme.primary,
+        modifier = Modifier
     ) {
+
         screens.forEach { screen ->
-            AddItem(
-                screen = screen,
-                currentDestination = currentDestination,
-                navController = navController
+
+            val selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true
+            BottomNavigationItem(
+                icon = {
+                    Icon(
+                        imageVector = screen.selectedIcon,
+                        contentDescription = screen.title,
+                    )
+                },
+                label = {
+                    Text(
+                        text = screen.title,
+                        color = Color.White
+                    )
+                },
+                selected = selected,
+                onClick = {
+                    navController.navigate(screen.route) {
+                        popUpTo(navController.graph.findStartDestination().id)
+                        launchSingleTop = true
+                    }
+                },
+                selectedContentColor = LocalContentColor.current,
+                unselectedContentColor = LocalContentColor.current,
+                modifier = Modifier.navigationBarsPadding()
             )
         }
     }
-
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun RowScope.AddItem(
-    screen: BottomNavScreen,
-    currentDestination: NavDestination?,
-    navController: NavHostController
-) {
-    val selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true
-
-    NavigationBarItem(
-        selected = selected,
-        onClick = {
-            navController.navigate(screen.route) {
-                popUpTo(navController.graph.findStartDestination().id)
-                launchSingleTop = true
-            }
-        },
-        label = {
-            Text(text = screen.title)
-        },
-        alwaysShowLabel = true,
-        icon = {
-            BadgedBox(
-                badge = {
-                    if (screen.badgeCount != null) {
-                        Badge {
-                            Text(text = screen.badgeCount.toString())
-                        }
-                    } else if (screen.hasBadge) {
-                        Badge()
-                    }
-                }
-            ) {
-                Icon(
-                    imageVector = if (selected) {
-                        screen.selectedIcon
-                    } else screen.unselectedIcon,
-                    contentDescription = screen.title
-                )
-            }
-        }
-    )
-
 }
 
 @Composable
